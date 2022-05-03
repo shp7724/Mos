@@ -37,6 +37,10 @@ class ScrollCore {
     let mouseLeftEventMask = CGEventMask(1 << CGEventType.leftMouseDown.rawValue)
     let mouseRightEventMask = CGEventMask(1 << CGEventType.rightMouseDown.rawValue)
     
+    /// Fix for Logitech Lift
+    /// -13에서 -184로 급발진하는 것을 막는다.
+    static var lastScrollOffsetY: Double = 0
+    
     // MARK: - 滚动事件处理
     let scrollEventCallBack: CGEventTapCallBack = { (proxy, type, event, refcon) in
         // 滚动事件
@@ -89,6 +93,15 @@ class ScrollCore {
                 // 禁止返回原始事件
                 returnOriginalEvent = false
                 // 如果输入值为非 Fixed 类型, 则使用 Step 作为门限值将数据归一化
+                
+                print("lastOffset", lastScrollOffsetY)
+                // Fix for Logitech Lift
+                if (lastScrollOffsetY == -13 || lastScrollOffsetY == -12) && scrollEvent.Y.usableValue == -184 {
+                    print("Logitech Lift Fix")
+                    scrollEvent.Y.usableValue = -13
+                }
+                lastScrollOffsetY = scrollEvent.Y.usableValue
+                
                 if !scrollEvent.Y.fixed {
                     ScrollEvent.normalizeY(scrollEvent, step)
                 }
@@ -110,6 +123,7 @@ class ScrollCore {
                 }
             }
         }
+        
         // 触发滚动事件推送
         if enableSmooth {
             ScrollPoster.shared.update(
@@ -122,6 +136,7 @@ class ScrollCore {
                 amplification: ScrollCore.shared.dashAmplification
             ).enable()
         }
+        
         // 返回事件对象
         if returnOriginalEvent {
             return Unmanaged.passUnretained(event)

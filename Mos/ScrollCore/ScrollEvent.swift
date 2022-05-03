@@ -137,6 +137,9 @@ extension ScrollEvent {
             return {
                 (scrollEvent: ScrollEvent, threshold: Double) in
                     let usableValue = scrollEvent.Y.usableValue
+                print("usableValue, magnitude, threshold : ",usableValue, usableValue.magnitude, threshold
+                
+                )
                     scrollEvent.Y.usableValue = usableValue>0.0 ? max(usableValue.magnitude, threshold) : -max(usableValue.magnitude, threshold)
             }
         } else {
